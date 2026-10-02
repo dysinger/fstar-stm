@@ -1,7 +1,8 @@
+(* Copyright 2026 Department of Code LLC.
+   SPDX-License-Identifier: AGPL-3.0-or-later *)
+
 (**
 Data.StateMachine.Types — Core State Machine Types
-
-Copyright 2026 Department of Code LLC. All rights reserved.
 
 Parametric state machine abstractions: [state_machine_t], [moore_t],
 [mealy_t] with smart constructors and validity predicates.  All types

@@ -1,7 +1,8 @@
+(* Copyright 2026 Department of Code LLC.
+   SPDX-License-Identifier: AGPL-3.0-or-later *)
+
 (**
 Data.StateMachine.Examples — 10 Verified State Machine Examples
-
-Copyright 2026 Department of Code LLC. All rights reserved.
 
 This module demonstrates the State Machine Library through 10 diverse,
 fully-verified examples. Each example is self-contained with:
@@ -40,7 +41,6 @@ open Data.StateMachine.Machine
     Moore output: light_color — returns the current color as a string.
 
     States, events, invariants, and demo lemmas follow. *)
-
 
 type traffic_state = | Red | Yellow | Green
 
@@ -88,7 +88,6 @@ let lemma_traffic_moore_output () : Lemma
    light_output Green == "green")
   = ()
 
-
 (** Example 2: Turnstile (Mealy Machine)
 
     Pattern: Mealy machine — output depends on BOTH state and event.
@@ -99,7 +98,6 @@ let lemma_traffic_moore_output () : Lemma
     Invariant: passage is only granted on Push when Unlocked
 
     States, events, invariants, and demo lemmas follow. *)
-
 
 type turnstile_state = | Locked | Unlocked
 
@@ -146,7 +144,6 @@ let lemma_turnstile_push_without_pay () : Lemma
   (run turnstile_mealy.sm [Push] == Some Locked)
   = ()
 
-
 (** Example 3: TCP Connection (Protocol State Machine)
 
     Pattern: Protocol state machine following RFC 793. Demonstrates
@@ -160,7 +157,6 @@ let lemma_turnstile_push_without_pay () : Lemma
     bidirectional close handshake integrity
 
     States, events, invariants, and demo lemmas follow. *)
-
 
 type tcp_state =
   | Closed
@@ -271,7 +267,6 @@ let lemma_tcp_no_transition_from_closed () : Lemma
    tcp_step Closed RecvFin == None)
   = ()
 
-
 (** Example 4: HTTP/2 Stream (Orthogonal Regions)
 
     Pattern: Orthogonal regions (AND-decomposition). The stream state is a
@@ -284,7 +279,6 @@ let lemma_tcp_no_transition_from_closed () : Lemma
     both halves are HalfClosed
 
     States, events, invariants, and demo lemmas follow. *)
-
 
 type h2_half = | Idle | OpenH2 | HalfClosed
 
@@ -359,7 +353,6 @@ let lemma_h2_rst_immediate () : Lemma
    == Some (HalfClosed, HalfClosed))
   = ()
 
-
 (** Example 5: Elevator (Rich State with Safety Invariants)
 
     Pattern: Rich state with safety invariants. Demonstrates parameterized
@@ -373,7 +366,6 @@ let lemma_h2_rst_immediate () : Lemma
     emergency stop exits any state
 
     States, events, invariants, and demo lemmas follow. *)
-
 
 type direction = | Up | Down
 
@@ -461,7 +453,6 @@ let lemma_elevator_service_call () : Lemma
    == Some (IdleAtFloor 3))
   = ()
 
-
 (** Example 6: Card Game Turn (Multi-Phase State Machine)
 
     Pattern: Multi-phase state machine. Demonstrates sequential phase
@@ -475,7 +466,6 @@ let lemma_elevator_service_call () : Lemma
     Invariant: one player active per turn; phase order respected
 
     States, events, invariants, and demo lemmas follow. *)
-
 
 type game_phase = | PreFlop | FlopPhase | TurnPhase | RiverPhase
 
@@ -570,7 +560,6 @@ let lemma_game_fold_advances () : Lemma
 
     States, events, invariants, and demo lemmas follow. *)
 
-
 type auth_state =
   | LoggedOut
   | LoggingIn: attempt: nat -> auth_state
@@ -661,7 +650,6 @@ let lemma_auth_session_timeout () : Lemma
   (auth_step (LoggedIn 0 100) AuthTimeout == Some LoggedOut)
   = ()
 
-
 (** Example 8: Retry with Backoff (Error Recovery)
 
     Pattern: Error recovery with parameterized states and linear backoff.
@@ -671,7 +659,6 @@ let lemma_auth_session_timeout () : Lemma
     Invariant: attempt bounded; delay positive (linear backoff, not exponential)
 
     States, events, invariants, and demo lemmas follow. *)
-
 
 type retry_state =
   | RetryIdle
@@ -761,7 +748,6 @@ let lemma_retry_permanent_error () : Lemma
   (run retry_machine [Start; PermanentError] == Some Failed)
   = ()
 
-
 (** Example 9: Saga/Transaction (Long-Running with Compensation)
 
     Pattern: Long-running transaction (Saga) with compensating actions.
@@ -774,7 +760,6 @@ let lemma_retry_permanent_error () : Lemma
     saga is either completed or compensated
 
     States, events, invariants, and demo lemmas follow. *)
-
 
 (* Compensation tracking: explicit state per compensation step.
    CompStep3 = compensating step 3, CompStep2 = step 2, CompStep1 = step 1. *)
@@ -849,7 +834,6 @@ let lemma_saga_compensation_reverse () : Lemma
    == Some SagaFailed)
   = ()
 
-
 (** Example 10: Vending Machine (Multi-Step Transaction)
 
     Pattern: Multi-step transaction with accumulated state (balance) and refunds.
@@ -862,7 +846,6 @@ let lemma_saga_compensation_reverse () : Lemma
     insufficient funds prevents selection; cancel refunds
 
     States, events, invariants, and demo lemmas follow. *)
-
 
 type vend_state =
   | IdleVend: balance: nat -> vend_state

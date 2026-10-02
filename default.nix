@@ -18,7 +18,7 @@
 #                 the Pulse leaf (Data.StateMachine.Pulse, `--custard_backend
 #                 OCaml`) as one dune library.
 #   - `native`  — C11 shared/static lib of the Pulse leaf (Data.StateMachine.Pulse,
-#                 `--custard_backend C`), no karamel.
+#                 `--custard_backend C`).
 #   - `fsharp`  — .NET library of the Pulse leaf (`--custard_backend FSharp`).
 #
 # Returns { checked; ocaml; native; fsharp; }.
@@ -188,7 +188,7 @@ let
   # ── native (C) backend ─────────────────────────────────────────────
   #
   # `--codegen Custard --custard_backend C` extracts the Pulse leaf to C11
-  # with no karamel runtime.  The whole module is a library (no `main`), rooted
+  # The whole module is a library (no `main`), rooted
   # at the encode/decode functions.
 
   native = mkDerivation {
@@ -228,7 +228,7 @@ let
         --custard_entry Data.StateMachine.Pulse.decode \
         --odir $out \
         src/Data.StateMachine.Pulse.fst || exit 1
-      # Compile the emitted C11 to a shared object + static lib (no karamel).
+      # Compile the emitted C11 to a shared object + static lib.
       cc -c -Wall -Wextra -Werror -std=c11 -O2 -fPIC -I $out $out/Custard.c -o $out/Custard.o
       if [ "$(uname -s)" = Darwin ]; then
         cc -dynamiclib $out/Custard.o -o $out/lib${pname}.dylib

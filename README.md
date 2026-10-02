@@ -1,4 +1,4 @@
-# Data.StateMachine — Verified State Machine Library
+# stm — verified state machine library
 
 A formally verified state machine framework in F*.  Defines state machines as
 transition functions with initial states, supports Moore/Mealy machines,

@@ -1,7 +1,8 @@
+(* Copyright 2026 Department of Code LLC.
+   SPDX-License-Identifier: AGPL-3.0-or-later *)
+
 (**
 Data.StateMachine.Machine — Transition Logic & Machine Patterns
-
-Copyright 2026 Department of Code LLC. All rights reserved.
 
 Run-to-completion semantics, event sourcing replay, Moore/Mealy output,
 composite states (OR-decomposition), and orthogonal regions

@@ -37,9 +37,7 @@ FSTAR_FLAGS = --no_default_includes \
 # ── F* verification ───────────────────────────────────────────────
 
 # Source modules in DEPENDENCY ORDER (leaf modules first).
-#
-# Data.StateMachine.Pulse is the Custard-era Pulse leaf (the old KaRaMeL
-# Data.StateMachine.Low was deleted with the Low* stdlib in v2026.09.20).
+
 SRC_MODS := Data.StateMachine.Types Data.StateMachine.Invariants \
             Data.StateMachine.Machine Data.StateMachine.Examples \
             Data.StateMachine.Pulse

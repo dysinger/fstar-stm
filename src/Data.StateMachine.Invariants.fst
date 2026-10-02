@@ -1,7 +1,8 @@
+(* Copyright 2026 Department of Code LLC.
+   SPDX-License-Identifier: AGPL-3.0-or-later *)
+
 (**
 Data.StateMachine.Invariants — Lemma library: progress, safety, bridging
-
-Copyright 2026 Department of Code LLC. All rights reserved.
 
 Progress and safety lemmas for state machines.  All lemmas are
 proven by definitional equality — zero admits.
