@@ -171,6 +171,7 @@ type tcp_state =
   | CloseWait
   | LastAck
 
+(** TCP connection events (RFC 793 connect/close handshake signals). *)
 type tcp_event =
   | PassiveOpen
   | ActiveOpen
@@ -182,6 +183,7 @@ type tcp_event =
   | RecvFin
   | Timeout
 
+(** TCP connection transition: the RFC 793 connect/close state machine. *)
 let tcp_step (st: tcp_state) (ev: tcp_event) : option tcp_state =
   match st, ev with
   (* From Closed *)
@@ -219,6 +221,7 @@ let tcp_step (st: tcp_state) (ev: tcp_event) : option tcp_state =
   (* No other transitions *)
   | _, _ -> None
 
+(** The TCP connection [state_machine_t] (starts [Closed]). *)
 let tcp_machine : state_machine_t tcp_state tcp_event =
   mk_state_machine Closed tcp_step
 
@@ -299,6 +302,7 @@ let h2_send_step (st: h2_half) (ev: h2_event) : option h2_half =
   | SendData -> (match st with | OpenH2 -> Some OpenH2 | _ -> Some st)
   | RecvHeaders | RecvEndStream | RecvData -> Some st
 
+(** HTTP/2 receive-half transition (the [Recv] side of the product step). *)
 let h2_recv_step (st: h2_half) (ev: h2_event) : option h2_half =
   match ev with
   | SendRstStream -> Some HalfClosed
@@ -308,11 +312,14 @@ let h2_recv_step (st: h2_half) (ev: h2_event) : option h2_half =
   | RecvData -> (match st with | OpenH2 -> Some OpenH2 | _ -> Some st)
   | SendHeaders | SendEndStream | SendData -> Some st
 
+(** HTTP/2 connection state: a pair of independent send/receive halves. *)
 type h2_state = h2_half & h2_half
 
+(** HTTP/2 full connection transition: the product of the two half steps. *)
 let h2_step (st: h2_state) (ev: h2_event) : option h2_state =
   product_step h2_send_step h2_recv_step st ev
 
+(** The HTTP/2 connection [state_machine_t] (both halves start [Idle]). *)
 let h2_machine : state_machine_t h2_state h2_event =
   mk_state_machine (Idle, Idle) h2_step
 
@@ -383,6 +390,7 @@ type elevator_event =
   | EmergencyButton
   | Reset
 
+(** Elevator transition: door/floor movement as calls and selections arrive. *)
 let elevator_step (st: elevator_state) (ev: elevator_event) : option elevator_state =
   match st, ev with
   | IdleAtFloor f, CallElevator target ->
@@ -401,6 +409,7 @@ let elevator_step (st: elevator_state) (ev: elevator_event) : option elevator_st
   | EmergencyStopped, Reset -> Some (IdleAtFloor 0)  (* reset to ground floor *)
   | _, _ -> None
 
+(** The elevator [state_machine_t] (starts [IdleAtFloor 0]). *)
 let elevator_machine : state_machine_t elevator_state elevator_event =
   mk_state_machine (IdleAtFloor 0) elevator_step
 
@@ -481,6 +490,7 @@ type game_state =
   | Showdown
   | RoundEnd
 
+(** Poker game events: join/start/player-action/… driving the rounds. *)
 type game_event =
   | PlayerJoin
   | StartGame
@@ -488,6 +498,7 @@ type game_event =
   | AllBetsMatched
   | GameTimeout
 
+(** Ordered poker round progression ([PreFlop] → … → [Showdown]). *)
 let next_phase (p: game_phase) : option game_phase =
   match p with
   | PreFlop -> Some FlopPhase
@@ -495,6 +506,7 @@ let next_phase (p: game_phase) : option game_phase =
   | TurnPhase -> Some RiverPhase
   | RiverPhase -> None  (* goes to Showdown, not a phase *)
 
+(** Poker game transition: lobby, deal, rounds, resolution. *)
 let game_step (st: game_state) (ev: game_event) : option game_state =
   match st, ev with
   | WaitingForPlayers, PlayerJoin -> Some WaitingForPlayers  (* stay until StartGame *)
@@ -518,6 +530,7 @@ let game_step (st: game_state) (ev: game_event) : option game_state =
   | RoundEnd, StartGame -> Some Shuffling  (* new round *)
   | _, _ -> None
 
+(** The poker game [state_machine_t] (starts [WaitingForPlayers]). *)
 let game_machine : state_machine_t game_state game_event =
   mk_state_machine WaitingForPlayers game_step
 
@@ -704,6 +717,7 @@ let retry_step (st: retry_state) (ev: retry_event) : option retry_state =
   | Failed, Start -> Some RetryIdle  (* reset *)
   | _, _ -> None
 
+(** The exponential-backoff retry [state_machine_t] (starts [RetryIdle]). *)
 let retry_machine : state_machine_t retry_state retry_event =
   mk_state_machine RetryIdle retry_step
 
@@ -774,6 +788,7 @@ type saga_state =
   | SagaCompleted
   | SagaFailed
 
+(** Saga step events: each forward step plus its failure trigger. *)
 type saga_event =
   | Step1Success
   | Step2Success
@@ -781,6 +796,7 @@ type saga_event =
   | StepFailure
   | CompDone
 
+(** Saga transition: forward steps succeed, any failure triggers compensation. *)
 let saga_step (st: saga_state) (ev: saga_event) : option saga_state =
   match st, ev with
   | SagaInit, Step1Success -> Some Step1Done
@@ -798,6 +814,7 @@ let saga_step (st: saga_state) (ev: saga_event) : option saga_state =
   | SagaFailed, _ -> None     (* terminal *)
   | _, _ -> None
 
+(** The saga [state_machine_t] (starts [SagaInit]). *)
 let saga_machine : state_machine_t saga_state saga_event =
   mk_state_machine SagaInit saga_step
 
@@ -888,6 +905,7 @@ let vend_step (st: vend_state) (ev: vend_event) : option vend_state =
     if code = code' then Some (IdleVend 0) else Some (OutOfStock code)
   | _, _ -> None
 
+(** The vending-machine [state_machine_t] (starts [IdleVend 0]). *)
 let vend_machine : state_machine_t vend_state vend_event =
   mk_state_machine (IdleVend 0) vend_step
 
