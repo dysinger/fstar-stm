@@ -4,9 +4,7 @@
 (**
 Data.StateMachine.Pulse — C-extractable state-machine tag codec via Pulse + Custard.
 
-The Custard-era replacement for the retired KaRaMeL
-[Data.StateMachine.Low] (which used [LowStar.Buffer]/[Stack]; both namespaces
-were removed from F* ≥ v2026.09.20).  A single-byte tag selects the state of
+A single-byte tag selects the state of
 the machine — [SS_Idle] (0x00), [SS_Active] (0x01), [SS_Error] (0x02), or
 [SS_Done] (0x03) — written/read through a [Pulse.Lib.Array.array].
 

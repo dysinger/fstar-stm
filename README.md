@@ -3,7 +3,7 @@
 A formally verified state machine framework in F*.  Defines state machines as
 transition functions with initial states, supports Moore/Mealy machines,
 invariants (progress & safety), composite/orthogonal decomposition, and C
-extraction via Pulse + Custard (no KaRaMeL).
+extraction via Pulse + Custard.
 
 ## Architecture
 
@@ -21,7 +21,7 @@ Data.StateMachine.Pulse      — C-extractable state-tag codec (Custard)
   (definitional equality, case analysis, or induction); no `admit()`, no
   `magic ()`.
 - **C extraction.**  [Data.StateMachine.Pulse] extracts to C11 via Custard
-  (`--custard_backend C`, no KaRaMeL).  A single-byte tag selects the state —
+  (`--custard_backend C`).  A single-byte tag selects the state —
   [SS_Idle] (0x00), [SS_Active] (0x01), [SS_Error] (0x02), [SS_Done] (0x03).
 - **100% fsdoc.**  All modules carry `@header`, `@param`, `@returns`, and
   `@ensures` tags.  Zero `///` comments, zero ASCII-art headers.
