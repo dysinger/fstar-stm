@@ -1,6 +1,7 @@
 (* Copyright 2026 Department of Code LLC.
    SPDX-License-Identifier: AGPL-3.0-or-later *)
 
+
 (**
 Data.StateMachine.Invariants — Lemma library: progress, safety, bridging
 
@@ -18,9 +19,12 @@ case-analyze over your finite state/event types.
 *)
 module Data.StateMachine.Invariants
 
+
 open Data.StateMachine.Types
 
+
 (** Progress — deadlock freedom *)
+
 
 (** Convenience re-wrap: if a specific event produces a valid transition,
     then progress is possible from this state (existential introduction).
@@ -40,7 +44,9 @@ let lemma_progress (#s: Type) (#e: Type)
     (ensures exists ev'. Some? (sm.step st ev'))
   = ()
 
+
 (** Safety — terminal states have no outgoing transitions *)
+
 
 (** Definitional identity: [terminal sm st] expands to the ensures clause.
     This lemma exists for cross-module callers where the [terminal]
@@ -57,7 +63,9 @@ let lemma_terminal_no_transitions (#s: Type) (#e: Type)
     (ensures forall (ev: e). sm.step st ev == None)
   = ()
 
+
 (** Replay and Determinism — available via [Machine] *)
+
 
 (** [lemma_replay_from_equals_run_from], [lemma_replay_equals_run],
     [lemma_moore_output], and [lemma_mealy_valid]

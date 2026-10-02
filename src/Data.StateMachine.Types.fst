@@ -1,6 +1,7 @@
 (* Copyright 2026 Department of Code LLC.
    SPDX-License-Identifier: AGPL-3.0-or-later *)
 
+
 (**
 Data.StateMachine.Types — Core State Machine Types
 
@@ -12,6 +13,7 @@ are [noeq] to support function fields.
 *)
 module Data.StateMachine.Types
 
+
 (** State machine type — parametric over state and event types.
 
     @param s The state type.
@@ -20,6 +22,7 @@ noeq type state_machine_t (s: Type) (e: Type) = {
   initial : s;                    (** The initial state. *)
   step    : s -> e -> option s;   (** Transition function — [None] on invalid input. *)
 }
+
 
 (** Moore machine: output depends only on state.
 
@@ -31,6 +34,7 @@ noeq type moore_t (s: Type) (e: Type) (o: Type) = {
   output : s -> o;                (** Output function of state only. *)
 }
 
+
 (** Mealy machine: output depends on state and event.
 
     @param s The state type.
@@ -41,7 +45,9 @@ noeq type mealy_t (s: Type) (e: Type) (o: Type) = {
   output : s -> e -> option (o & s);  (** Output + next state, or [None]. *)
 }
 
+
 (** Transition validity *)
+
 
 (** Check if a transition is valid for a given state and event.
 
@@ -52,6 +58,7 @@ noeq type mealy_t (s: Type) (e: Type) (o: Type) = {
 let valid_transition (#s: Type) (#e: Type) (sm: state_machine_t s e) (st: s) (ev: e)
   : bool
   = Some? (sm.step st ev)
+
 
 (** Terminal state predicate — no further transitions are defined.
 
@@ -64,6 +71,7 @@ let valid_transition (#s: Type) (#e: Type) (sm: state_machine_t s e) (st: s) (ev
 let terminal (#s: Type) (#e: Type) (sm: state_machine_t s e) (st: s)
   : prop
   = forall (ev: e). sm.step st ev == None
+
 
 (** Terminal states have no valid transitions — bridging [prop] and [bool].
 
@@ -79,7 +87,9 @@ let lemma_terminal_implies_not_valid (#s #e: Type) (sm: state_machine_t s e) (st
   (ensures valid_transition sm st ev == false)
   = ()
 
+
 (** Smart constructors *)
+
 
 (** Construct a [state_machine_t]. Always succeeds.
 
@@ -89,6 +99,7 @@ let lemma_terminal_implies_not_valid (#s #e: Type) (sm: state_machine_t s e) (st
 let mk_state_machine (#s: Type) (#e: Type) (init: s) (step_fn: s -> e -> option s)
   : state_machine_t s e
   = { initial = init; step = step_fn }
+
 
 (** Construct a [moore_t]. Always succeeds.
 
@@ -100,6 +111,7 @@ let mk_moore (#s: Type) (#e: Type) (#o: Type)
   (init: s) (step_fn: s -> e -> option s) (out_fn: s -> o)
   : moore_t s e o
   = { sm = mk_state_machine init step_fn; output = out_fn }
+
 
 (** Construct a [mealy_t]. Always succeeds.
 

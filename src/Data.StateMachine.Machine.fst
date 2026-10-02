@@ -1,6 +1,7 @@
 (* Copyright 2026 Department of Code LLC.
    SPDX-License-Identifier: AGPL-3.0-or-later *)
 
+
 (**
 Data.StateMachine.Machine — Transition Logic & Machine Patterns
 
@@ -13,9 +14,12 @@ or definitional reflexivity.
 *)
 module Data.StateMachine.Machine
 
+
 open Data.StateMachine.Types
 
+
 (** Run-to-Completion *)
+
 
 (** Fold events from a given state through [step].
 
@@ -34,6 +38,7 @@ let rec run_from (#s #e: Type) (sm: state_machine_t s e) (st: s) (events: list e
       | None -> None
       | Some st' -> run_from sm st' rest
 
+
 (** Run a trace of events from the initial state.
 
     Short-circuits on the first invalid event.
@@ -44,7 +49,9 @@ let rec run_from (#s #e: Type) (sm: state_machine_t s e) (st: s) (events: list e
 let run (#s #e: Type) (sm: state_machine_t s e) (events: list e) : option s
   = run_from sm sm.initial events
 
+
 (** Event Sourcing Replay *)
+
 
 (** Fold events from a given state, assuming all transitions are defined.
 
@@ -66,6 +73,7 @@ let rec replay_from (#s #e: Type) (sm: state_machine_t s e) (st: s) (events: lis
       | Some st' -> replay_from sm st' rest
       | None -> st
 
+
 (** Reconstruct the current state from an event log.
 
     Assumes the log is valid (all transitions are defined).
@@ -76,7 +84,9 @@ let rec replay_from (#s #e: Type) (sm: state_machine_t s e) (st: s) (events: lis
 let replay (#s #e: Type) (sm: state_machine_t s e) (events: list e) : s
   = replay_from sm sm.initial events
 
+
 (** Moore Machine *)
+
 
 (** Combine Moore transition and output.
 
@@ -92,7 +102,9 @@ let step_with_output (#s #e #o: Type) (m: moore_t s e o) (st: s) (ev: e)
     | None -> None
     | Some st' -> Some (m.output st, st')
 
+
 (** Mealy Machine *)
+
 
 (** Mealy output integrated with transition.
 
@@ -108,7 +120,9 @@ let step_with_output_mealy (#s #e #o: Type) (m: mealy_t s e o) (st: s) (ev: e)
   : option (o & s)
   = m.output st ev
 
+
 (** Orthogonal Regions — AND-decomposition *)
+
 
 (** Compose two independent step functions for a product state.
 
@@ -130,7 +144,9 @@ let product_step (#a #b #e: Type)
     | Some a', Some b' -> Some (a', b')
     | _ -> None
 
+
 (** Composite States — OR-decomposition *)
+
 
 (** Dispatch an event to a composite state.
 
@@ -154,7 +170,9 @@ let composite_step (#outer #inner #e: Type)
     | Some inner' -> Some (wrap inner')
     | None -> outer_step (wrap st) ev
 
+
 (** Lemmas *)
+
 
 (** Run of an empty event list returns the initial state.
 
@@ -165,6 +183,7 @@ let composite_step (#outer #inner #e: Type)
 let lemma_run_empty (#s #e: Type) (sm: state_machine_t s e) : Lemma
   (ensures run sm [] == Some sm.initial)
   = ()
+
 
 (** Moore output depends only on state — calling [step_with_output]
     twice with the same state and different events yields the same output.
@@ -182,6 +201,7 @@ let lemma_moore_output (#s #e #o: Type) (m: moore_t s e o) (st: s) (ev1 ev2: e) 
             | _ -> True))
   = ()
 
+
 (** Mealy output determines transition validity — the step succeeds
     iff the output function returns [Some].
 
@@ -192,6 +212,7 @@ let lemma_moore_output (#s #e #o: Type) (m: moore_t s e o) (st: s) (ev1 ev2: e) 
 let lemma_mealy_valid (#s #e #o: Type) (m: mealy_t s e o) (st: s) (ev: e) : Lemma
   (ensures step_with_output_mealy m st ev == m.output st ev)
   = ()
+
 
 (** Replay reproduces run result — when [run] succeeds, [replay]
     and [run] return the same state.
@@ -214,6 +235,7 @@ let rec lemma_replay_from_equals_run_from (#s #e: Type)
     | ev :: rest ->
       let Some st' = sm.step st ev in
       lemma_replay_from_equals_run_from sm st' rest
+
 
 (** Top-level variant: [run] and [replay] agree on valid traces.
 

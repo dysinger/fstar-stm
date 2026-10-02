@@ -1,6 +1,7 @@
 (* Copyright 2026 Department of Code LLC.
    SPDX-License-Identifier: AGPL-3.0-or-later *)
 
+
 (**
 Data.StateMachine.Examples — 10 Verified State Machine Examples
 
@@ -28,8 +29,10 @@ Patterns demonstrated:
 *)
 module Data.StateMachine.Examples
 
+
 open Data.StateMachine.Types
 open Data.StateMachine.Machine
+
 
 (** Example 1: Traffic Light (Moore Machine)
 
@@ -42,29 +45,41 @@ open Data.StateMachine.Machine
 
     States, events, invariants, and demo lemmas follow. *)
 
+
 type traffic_state = | Red | Yellow | Green
 
+
+(** Traffic-light transition event (the single [Tick] advances the cycle). *)
 type traffic_event = | Tick
 
+
+(** Traffic-light transition: Red → Green → Yellow → Red on each [Tick]. *)
 let traffic_step (st: traffic_state) (ev: traffic_event) : option traffic_state =
   match st, ev with
   | Red, Tick -> Some Green
   | Green, Tick -> Some Yellow
   | Yellow, Tick -> Some Red
 
+
+(** The traffic-light [state_machine_t] (starts [Red]). *)
 let traffic_machine : state_machine_t traffic_state traffic_event =
   mk_state_machine Red traffic_step
+
 
 (** Moore output: the light color as a string *)
 let light_output (st: traffic_state) : string =
   match st with
   | Red -> "red" | Yellow -> "yellow" | Green -> "green"
 
+
+(** The traffic-light [moore_t] (output = current light color). *)
 let traffic_moore : moore_t traffic_state traffic_event string =
   mk_moore Red traffic_step light_output
 
+
 (** Invariant: state is always one of the three valid colors (always true for enum) *)
 let valid_light (st: traffic_state) : bool = true
+
 
 (** Preservation: invariant trivially holds for all states *)
 let lemma_traffic_preservation (st: traffic_state) (ev: traffic_event)
@@ -72,12 +87,14 @@ let lemma_traffic_preservation (st: traffic_state) (ev: traffic_event)
           (ensures (let Some st' = traffic_step st ev in valid_light st'))
   = ()
 
+
 (** Demo: full cycle Red → Green → Yellow → Red.
 
     @ensures [run traffic_machine [Tick; Tick; Tick] == Some Red] *)
 let lemma_traffic_cycle () : Lemma
   (run traffic_machine [Tick; Tick; Tick] == Some Red)
   = ()
+
 
 (** Moore output depends only on state, not event.
 
@@ -87,6 +104,7 @@ let lemma_traffic_moore_output () : Lemma
    light_output Yellow == "yellow" /\
    light_output Green == "green")
   = ()
+
 
 (** Example 2: Turnstile (Mealy Machine)
 
@@ -99,15 +117,21 @@ let lemma_traffic_moore_output () : Lemma
 
     States, events, invariants, and demo lemmas follow. *)
 
+
 type turnstile_state = | Locked | Unlocked
 
+
+(** Turnstile events: [Coin] pays, [Push] requests passage. *)
 type turnstile_event = | Coin | Push
 
+
+(** Turnstile outcomes: the four possible passage results. *)
 type turnstile_output =
   | NoOutput
   | PassageGranted
   | PassageDenied
   | AlreadyUnlocked
+
 
 (** Mealy output: (output, next_state) for each (state, event) pair *)
 let turnstile_output_fn (st: turnstile_state) (ev: turnstile_event)
@@ -118,17 +142,22 @@ let turnstile_output_fn (st: turnstile_state) (ev: turnstile_event)
     | Unlocked, Coin -> Some (AlreadyUnlocked, Unlocked)
     | Unlocked, Push -> Some (PassageGranted, Locked)
 
+
+(** The turnstile [mealy_t] (starts [Locked]). *)
 let turnstile_mealy : mealy_t turnstile_state turnstile_event turnstile_output =
   mk_mealy Locked turnstile_output_fn
 
+
 (** Invariant: a valid state (always true for 2-state enum) *)
 let turnstile_invariant (st: turnstile_state) : bool = true
+
 
 (** Preservation: trivial for finite states *)
 let lemma_turnstile_preservation (st: turnstile_state) (ev: turnstile_event)
   : Lemma (requires turnstile_invariant st /\ Some? (turnstile_mealy.sm.step st ev))
           (ensures (let Some st' = turnstile_mealy.sm.step st ev in turnstile_invariant st'))
   = ()
+
 
 (** Demo: pay then enter.
 
@@ -137,12 +166,14 @@ let lemma_turnstile_pay_enter () : Lemma
   (run turnstile_mealy.sm [Coin; Push] == Some Locked)
   = ()
 
+
 (** Demo: push without pay — stays Locked.
 
     @ensures [run turnstile_mealy.sm [Push] == Some Locked] *)
 let lemma_turnstile_push_without_pay () : Lemma
   (run turnstile_mealy.sm [Push] == Some Locked)
   = ()
+
 
 (** Example 3: TCP Connection (Protocol State Machine)
 
@@ -158,6 +189,7 @@ let lemma_turnstile_push_without_pay () : Lemma
 
     States, events, invariants, and demo lemmas follow. *)
 
+
 type tcp_state =
   | Closed
   | Listen
@@ -171,6 +203,7 @@ type tcp_state =
   | CloseWait
   | LastAck
 
+
 (** TCP connection events (RFC 793 connect/close handshake signals). *)
 type tcp_event =
   | PassiveOpen
@@ -182,6 +215,7 @@ type tcp_event =
   | Close
   | RecvFin
   | Timeout
+
 
 (** TCP connection transition: the RFC 793 connect/close state machine. *)
 let tcp_step (st: tcp_state) (ev: tcp_event) : option tcp_state =
@@ -221,9 +255,11 @@ let tcp_step (st: tcp_state) (ev: tcp_event) : option tcp_state =
   (* No other transitions *)
   | _, _ -> None
 
+
 (** The TCP connection [state_machine_t] (starts [Closed]). *)
 let tcp_machine : state_machine_t tcp_state tcp_event =
   mk_state_machine Closed tcp_step
+
 
 (** Invariant: data transfer only in Established state.
 
@@ -236,15 +272,18 @@ let tcp_invariant (st: tcp_state) : bool =
   | Established -> true  (* data transfer allowed *)
   | _ -> true
 
+
 (** After established, the connection is fully open *)
 let is_data_transfer_ready (st: tcp_state) : bool =
   st = Established
+
 
 (** Preservation: invariant holds across all valid transitions *)
 let lemma_tcp_preservation (st: tcp_state) (ev: tcp_event)
   : Lemma (requires tcp_invariant st /\ Some? (tcp_step st ev))
           (ensures (let Some st' = tcp_step st ev in tcp_invariant st'))
   = ()
+
 
 (** Active open handshake: Closed → SynSent → Established.
 
@@ -253,12 +292,14 @@ let lemma_tcp_active_open () : Lemma
   (run tcp_machine [ActiveOpen; RecvSynAck] == Some Established)
   = ()
 
+
 (** Passive close: Established → CloseWait → LastAck → Closed.
 
     @ensures [run tcp_machine [ActiveOpen; RecvSynAck; RecvFin; Close; RecvAck] == Some Closed] *)
 let lemma_tcp_passive_close () : Lemma
   (run tcp_machine [ActiveOpen; RecvSynAck; RecvFin; Close; RecvAck] == Some Closed)
   = ()
+
 
 (** No transition from Closed without an open event.
 
@@ -269,6 +310,7 @@ let lemma_tcp_no_transition_from_closed () : Lemma
    tcp_step Closed Close == None /\
    tcp_step Closed RecvFin == None)
   = ()
+
 
 (** Example 4: HTTP/2 Stream (Orthogonal Regions)
 
@@ -283,16 +325,21 @@ let lemma_tcp_no_transition_from_closed () : Lemma
 
     States, events, invariants, and demo lemmas follow. *)
 
+
 type h2_half = | Idle | OpenH2 | HalfClosed
 
+
+(** HTTP/2 stream events across send and receive halves. *)
 type h2_event =
   | SendHeaders | RecvHeaders
   | SendData | RecvData
   | SendEndStream | RecvEndStream
   | SendRstStream | RecvRstStream
 
+
 (* h2_send_step: for events that affect only the recv half, returns Some st
    (no change), so product_step composes correctly for orthogonal regions. *)
+(** HTTP/2 send-half transition (the [Send] side of the product step). *)
 let h2_send_step (st: h2_half) (ev: h2_event) : option h2_half =
   match ev with
   | SendRstStream -> Some HalfClosed
@@ -301,6 +348,7 @@ let h2_send_step (st: h2_half) (ev: h2_event) : option h2_half =
   | SendEndStream -> (match st with | OpenH2 -> Some HalfClosed | _ -> Some st)
   | SendData -> (match st with | OpenH2 -> Some OpenH2 | _ -> Some st)
   | RecvHeaders | RecvEndStream | RecvData -> Some st
+
 
 (** HTTP/2 receive-half transition (the [Recv] side of the product step). *)
 let h2_recv_step (st: h2_half) (ev: h2_event) : option h2_half =
@@ -312,26 +360,32 @@ let h2_recv_step (st: h2_half) (ev: h2_event) : option h2_half =
   | RecvData -> (match st with | OpenH2 -> Some OpenH2 | _ -> Some st)
   | SendHeaders | SendEndStream | SendData -> Some st
 
+
 (** HTTP/2 connection state: a pair of independent send/receive halves. *)
 type h2_state = h2_half & h2_half
+
 
 (** HTTP/2 full connection transition: the product of the two half steps. *)
 let h2_step (st: h2_state) (ev: h2_event) : option h2_state =
   product_step h2_send_step h2_recv_step st ev
 
+
 (** The HTTP/2 connection [state_machine_t] (both halves start [Idle]). *)
 let h2_machine : state_machine_t h2_state h2_event =
   mk_state_machine (Idle, Idle) h2_step
 
+
 (** Invariant: stream is in a consistent product state — always true
     for this finite-state model. *)
 let h2_invariant (st: h2_state) : bool = true
+
 
 (** Preservation *)
 let lemma_h2_preservation (st: h2_state) (ev: h2_event)
   : Lemma (requires h2_invariant st /\ Some? (h2_step st ev))
           (ensures (let Some st' = h2_step st ev in h2_invariant st'))
   = ()
+
 
 (** Normal close sequence: both halves close independently.
 
@@ -342,6 +396,7 @@ let lemma_h2_normal_close () : Lemma
    == Some (HalfClosed, HalfClosed))
   = ()
 
+
 (** Recv-half close: recv closes, send stays open.
 
     @ensures [run h2_machine [SendHeaders; RecvHeaders; RecvEndStream]
@@ -351,6 +406,7 @@ let lemma_h2_recv_half_close () : Lemma
    == Some (OpenH2, HalfClosed))
   = ()
 
+
 (** RST_STREAM immediate close from any state.
 
     @ensures [run h2_machine [SendHeaders; RecvHeaders; SendRstStream]
@@ -359,6 +415,7 @@ let lemma_h2_rst_immediate () : Lemma
   (run h2_machine [SendHeaders; RecvHeaders; SendRstStream]
    == Some (HalfClosed, HalfClosed))
   = ()
+
 
 (** Example 5: Elevator (Rich State with Safety Invariants)
 
@@ -374,8 +431,11 @@ let lemma_h2_rst_immediate () : Lemma
 
     States, events, invariants, and demo lemmas follow. *)
 
+
 type direction = | Up | Down
 
+
+(** Elevator states — parameterized by floor and direction. *)
 type elevator_state =
   | IdleAtFloor: floor: nat -> elevator_state
   | Moving: from: nat -> to_: nat -> dir: direction -> elevator_state
@@ -383,12 +443,15 @@ type elevator_state =
   | DoorsClosing: floor: nat -> elevator_state
   | EmergencyStopped: elevator_state
 
+
+(** Elevator events: calls, floor arrival, timeouts, emergency, reset. *)
 type elevator_event =
   | CallElevator: target: nat -> elevator_event
   | FloorReached: floor: nat -> elevator_event
   | DoorTimeout
   | EmergencyButton
   | Reset
+
 
 (** Elevator transition: door/floor movement as calls and selections arrive. *)
 let elevator_step (st: elevator_state) (ev: elevator_event) : option elevator_state =
@@ -409,9 +472,11 @@ let elevator_step (st: elevator_state) (ev: elevator_event) : option elevator_st
   | EmergencyStopped, Reset -> Some (IdleAtFloor 0)  (* reset to ground floor *)
   | _, _ -> None
 
+
 (** The elevator [state_machine_t] (starts [IdleAtFloor 0]). *)
 let elevator_machine : state_machine_t elevator_state elevator_event =
   mk_state_machine (IdleAtFloor 0) elevator_step
+
 
 (** Invariant: doors are only open/opening/closing when not moving.
 
@@ -426,11 +491,13 @@ let elevator_invariant (st: elevator_state) : bool =
   | IdleAtFloor _ -> true
   | EmergencyStopped -> true
 
+
 (** Preservation: invariant holds across all valid transitions *)
 let lemma_elevator_preservation (st: elevator_state) (ev: elevator_event)
   : Lemma (requires elevator_invariant st /\ Some? (elevator_step st ev))
           (ensures (let Some st' = elevator_step st ev in elevator_invariant st'))
   = ()
+
 
 (** Safety lemma: doors never open while moving.
 
@@ -442,6 +509,7 @@ let lemma_elevator_doors_safety (from to_: nat) (dir: direction)
   : Lemma (elevator_step (Moving from to_ dir) DoorTimeout == None)
   = ()
 
+
 (** Emergency stop from any non-EmergencyStopped state.
 
     @param st The current state (must not be [EmergencyStopped]).
@@ -450,6 +518,7 @@ let lemma_elevator_emergency_any_state (st: elevator_state)
   : Lemma (requires st =!= EmergencyStopped)
           (ensures elevator_step st EmergencyButton == Some EmergencyStopped)
   = ()
+
 
 (** Demo: service a call.
 
@@ -461,6 +530,7 @@ let lemma_elevator_service_call () : Lemma
   (run elevator_machine [CallElevator 3; FloorReached 2; FloorReached 3; DoorTimeout; FloorReached 3]
    == Some (IdleAtFloor 3))
   = ()
+
 
 (** Example 6: Card Game Turn (Multi-Phase State Machine)
 
@@ -476,11 +546,16 @@ let lemma_elevator_service_call () : Lemma
 
     States, events, invariants, and demo lemmas follow. *)
 
+
 type game_phase = | PreFlop | FlopPhase | TurnPhase | RiverPhase
 
+
+(** Poker player actions ([Fold]/[Check]/[Call]/[Raise]). *)
 type player_action =
   | Fold | Check | Call | Raise
 
+
+(** Poker game states from lobby through showdown and round end. *)
 type game_state =
   | WaitingForPlayers
   | Shuffling
@@ -490,6 +565,7 @@ type game_state =
   | Showdown
   | RoundEnd
 
+
 (** Poker game events: join/start/player-action/… driving the rounds. *)
 type game_event =
   | PlayerJoin
@@ -498,6 +574,7 @@ type game_event =
   | AllBetsMatched
   | GameTimeout
 
+
 (** Ordered poker round progression ([PreFlop] → … → [Showdown]). *)
 let next_phase (p: game_phase) : option game_phase =
   match p with
@@ -505,6 +582,7 @@ let next_phase (p: game_phase) : option game_phase =
   | FlopPhase -> Some TurnPhase
   | TurnPhase -> Some RiverPhase
   | RiverPhase -> None  (* goes to Showdown, not a phase *)
+
 
 (** Poker game transition: lobby, deal, rounds, resolution. *)
 let game_step (st: game_state) (ev: game_event) : option game_state =
@@ -530,18 +608,22 @@ let game_step (st: game_state) (ev: game_event) : option game_state =
   | RoundEnd, StartGame -> Some Shuffling  (* new round *)
   | _, _ -> None
 
+
 (** The poker game [state_machine_t] (starts [WaitingForPlayers]). *)
 let game_machine : state_machine_t game_state game_event =
   mk_state_machine WaitingForPlayers game_step
 
+
 (** Invariant: game is in a valid state *)
 let game_invariant (st: game_state) : bool = true
+
 
 (** Preservation *)
 let lemma_game_preservation (st: game_state) (ev: game_event)
   : Lemma (requires game_invariant st /\ Some? (game_step st ev))
           (ensures (let Some st' = game_step st ev in game_invariant st'))
   = ()
+
 
 (** Demo: partial trace — setup to first turn.
 
@@ -552,6 +634,7 @@ let lemma_game_setup () : Lemma
    == Some (PlayerTurn 0 PreFlop))
   = ()
 
+
 (** Demo: fold advances phase and alternates player.
 
     @ensures [game_step (PlayerTurn 1 FlopPhase) (PlayerAction 1 Fold)
@@ -559,6 +642,7 @@ let lemma_game_setup () : Lemma
 let lemma_game_fold_advances () : Lemma
   (game_step (PlayerTurn 1 FlopPhase) (PlayerAction 1 Fold) == Some (PlayerTurn 0 TurnPhase))
   = ()
+
 
 (** Example 7: Login/Logout (Auth Session with Timeout)
 
@@ -573,12 +657,15 @@ let lemma_game_fold_advances () : Lemma
 
     States, events, invariants, and demo lemmas follow. *)
 
+
 type auth_state =
   | LoggedOut
   | LoggingIn: attempt: nat -> auth_state
   | LoggedIn: session_id: nat -> last_activity: nat -> auth_state
   | LockedOut: until: nat -> auth_state
 
+
+(** Authentication events: login attempts, success/failure, logout, activity, timeout. *)
 type auth_event =
   | Login
   | LoginSuccess
@@ -587,10 +674,13 @@ type auth_event =
   | Activity
   | AuthTimeout
 
+
 (** Maximum login attempts before lockout.  After [max_attempts] failures,
     the next [LoginFailure] triggers [LockedOut]. *)
 let max_attempts : nat = 3
 
+
+(** Authentication transition: login, session, lockout, and timeout handling. *)
 let auth_step (st: auth_state) (ev: auth_event) : option auth_state =
   match st, ev with
   | LoggedOut, Login -> Some (LoggingIn 1)
@@ -608,8 +698,11 @@ let auth_step (st: auth_state) (ev: auth_event) : option auth_state =
     else Some (LockedOut (until - 1))
   | _, _ -> None
 
+
+(** The auth-session [state_machine_t] (starts [LoggedOut]). *)
 let auth_machine : state_machine_t auth_state auth_event =
   mk_state_machine LoggedOut auth_step
+
 
 (** Invariant: attempt count bounded by [max_attempts]; lockout timer bounded.
 
@@ -624,11 +717,13 @@ let auth_invariant (st: auth_state) : bool =
   | LockedOut until -> 0 < until && until <= 300
   | _ -> true
 
+
 (** Preservation *)
 let lemma_auth_preservation (st: auth_state) (ev: auth_event)
   : Lemma (requires auth_invariant st /\ Some? (auth_step st ev))
           (ensures (let Some st' = auth_step st ev in auth_invariant st'))
   = ()
+
 
 (** Demo: successful login.
 
@@ -636,6 +731,7 @@ let lemma_auth_preservation (st: auth_state) (ev: auth_event)
 let lemma_auth_successful_login () : Lemma
   (run auth_machine [Login; LoginSuccess] == Some (LoggedIn 0 0))
   = ()
+
 
 (** Demo: account lockout after 3 failures.
 
@@ -649,6 +745,7 @@ let lemma_auth_lockout () : Lemma
    == Some (LockedOut 300))
   = ()
 
+
 (** Lockout prevents further login attempts.
 
     @ensures [auth_step (LockedOut 300) Login == None] *)
@@ -656,12 +753,14 @@ let lemma_auth_locked_out_no_login () : Lemma
   (auth_step (LockedOut 300) Login == None)
   = ()
 
+
 (** Session timeout after inactivity.
 
     @ensures [auth_step (LoggedIn 0 100) AuthTimeout == Some LoggedOut] *)
 let lemma_auth_session_timeout () : Lemma
   (auth_step (LoggedIn 0 100) AuthTimeout == Some LoggedOut)
   = ()
+
 
 (** Example 8: Retry with Backoff (Error Recovery)
 
@@ -673,12 +772,15 @@ let lemma_auth_session_timeout () : Lemma
 
     States, events, invariants, and demo lemmas follow. *)
 
+
 type retry_state =
   | RetryIdle
   | Operating
   | Retrying: attempt: nat -> delay: nat -> retry_state
   | Failed
 
+
+(** Retry events: start/success/transient/permanent errors and timer expiry. *)
 type retry_event =
   | Start
   | Success
@@ -686,15 +788,19 @@ type retry_event =
   | PermanentError
   | RetryTimerExpired
 
+
 (** Maximum retry attempts before giving up.  Once [Retrying n d] reaches
     [n = retry_max], the next [TransientError] or [RetryTimerExpired]
     transitions to [Failed]. *)
 let retry_max : nat = 3
 
+
 (** Base delay in milliseconds for the first retry.  Subsequent retries
     use a linear backoff: 2× base from [Operating], (n+2)× base later. *)
 let retry_base_delay : nat = 100
 
+
+(** Retry transition with linear backoff and bounded attempts. *)
 let retry_step (st: retry_state) (ev: retry_event) : option retry_state =
   match st, ev with
   | RetryIdle, Start -> Some Operating
@@ -717,9 +823,11 @@ let retry_step (st: retry_state) (ev: retry_event) : option retry_state =
   | Failed, Start -> Some RetryIdle  (* reset *)
   | _, _ -> None
 
+
 (** The exponential-backoff retry [state_machine_t] (starts [RetryIdle]). *)
 let retry_machine : state_machine_t retry_state retry_event =
   mk_state_machine RetryIdle retry_step
+
 
 (** Invariant: attempt count bounded by [retry_max]; delay positive.
 
@@ -731,11 +839,13 @@ let retry_invariant (st: retry_state) : bool =
   | Retrying n d -> n <= retry_max && d > 0
   | _ -> true
 
+
 (** Preservation *)
 let lemma_retry_preservation (st: retry_state) (ev: retry_event)
   : Lemma (requires retry_invariant st /\ Some? (retry_step st ev))
           (ensures (let Some st' = retry_step st ev in retry_invariant st'))
   = ()
+
 
 (** Demo: successful retry.
 
@@ -746,6 +856,7 @@ let lemma_retry_successful () : Lemma
    == Some RetryIdle)
   = ()
 
+
 (** Demo: fourth transient error after three retries triggers Failed.
 
     @ensures [run retry_machine [Start; TransientError; TransientError; TransientError; TransientError]
@@ -755,12 +866,14 @@ let lemma_retry_max_exceeded () : Lemma
    == Some Failed)
   = ()
 
+
 (** Permanent error skips retry — goes directly to Failed.
 
     @ensures [run retry_machine [Start; PermanentError] == Some Failed] *)
 let lemma_retry_permanent_error () : Lemma
   (run retry_machine [Start; PermanentError] == Some Failed)
   = ()
+
 
 (** Example 9: Saga/Transaction (Long-Running with Compensation)
 
@@ -775,8 +888,10 @@ let lemma_retry_permanent_error () : Lemma
 
     States, events, invariants, and demo lemmas follow. *)
 
+
 (* Compensation tracking: explicit state per compensation step.
    CompStep3 = compensating step 3, CompStep2 = step 2, CompStep1 = step 1. *)
+(** Saga states: forward steps plus reverse-order compensation. *)
 type saga_state =
   | SagaInit
   | Step1Done
@@ -788,6 +903,7 @@ type saga_state =
   | SagaCompleted
   | SagaFailed
 
+
 (** Saga step events: each forward step plus its failure trigger. *)
 type saga_event =
   | Step1Success
@@ -795,6 +911,7 @@ type saga_event =
   | Step3Success
   | StepFailure
   | CompDone
+
 
 (** Saga transition: forward steps succeed, any failure triggers compensation. *)
 let saga_step (st: saga_state) (ev: saga_event) : option saga_state =
@@ -814,12 +931,15 @@ let saga_step (st: saga_state) (ev: saga_event) : option saga_state =
   | SagaFailed, _ -> None     (* terminal *)
   | _, _ -> None
 
+
 (** The saga [state_machine_t] (starts [SagaInit]). *)
 let saga_machine : state_machine_t saga_state saga_event =
   mk_state_machine SagaInit saga_step
 
+
 (** Invariant: compensation count matches forward progress *)
 let saga_invariant (st: saga_state) : bool = true
+
 
 (** Preservation *)
 let lemma_saga_preservation (st: saga_state) (ev: saga_event)
@@ -827,12 +947,14 @@ let lemma_saga_preservation (st: saga_state) (ev: saga_event)
           (ensures (let Some st' = saga_step st ev in saga_invariant st'))
   = ()
 
+
 (** Demo: all steps succeed.
 
     @ensures [run saga_machine [Step1Success; Step2Success; Step3Success] == Some Step3Done] *)
 let lemma_saga_all_succeed () : Lemma
   (run saga_machine [Step1Success; Step2Success; Step3Success] == Some Step3Done)
   = ()
+
 
 (** Demo: mid-saga failure triggers compensation from step 2.
 
@@ -842,6 +964,7 @@ let lemma_saga_mid_failure () : Lemma
    == Some CompStep2)
   = ()
 
+
 (** Demo: compensation runs in reverse order (3 → 2 → 1).
 
     @ensures [run saga_machine [Step1Success; Step2Success; Step3Success;
@@ -850,6 +973,7 @@ let lemma_saga_compensation_reverse () : Lemma
   (run saga_machine [Step1Success; Step2Success; Step3Success; StepFailure; CompDone; CompDone; CompDone]
    == Some SagaFailed)
   = ()
+
 
 (** Example 10: Vending Machine (Multi-Step Transaction)
 
@@ -864,18 +988,22 @@ let lemma_saga_compensation_reverse () : Lemma
 
     States, events, invariants, and demo lemmas follow. *)
 
+
 type vend_state =
   | IdleVend: balance: nat -> vend_state
   | Selecting: balance: nat -> vend_state
   | Dispensing: item: nat -> change: nat -> vend_state
   | OutOfStock: item: nat -> vend_state
 
+
+(** Vending-machine events: coin insertion, selection, dispense, cancel, restock. *)
 type vend_event =
   | InsertCoin: value: nat -> vend_event
   | SelectItem: code: nat -> vend_event
   | DispenseComplete
   | Cancel
   | Restock: code: nat -> vend_event
+
 
 (** Simple price table: item code -> price in cents *)
 let item_price (code: nat) : nat =
@@ -885,6 +1013,8 @@ let item_price (code: nat) : nat =
   | 2 -> 75    (* B1: 75 cents *)
   | _ -> 9999  (* unknown items are very expensive *)
 
+
+(** Vending-machine transition: escrow, dispensing, refunds, out-of-stock. *)
 let vend_step (st: vend_state) (ev: vend_event) : option vend_state =
   match st, ev with
   | IdleVend bal, InsertCoin v -> Some (Selecting (bal + v))
@@ -905,9 +1035,11 @@ let vend_step (st: vend_state) (ev: vend_event) : option vend_state =
     if code = code' then Some (IdleVend 0) else Some (OutOfStock code)
   | _, _ -> None
 
+
 (** The vending-machine [state_machine_t] (starts [IdleVend 0]). *)
 let vend_machine : state_machine_t vend_state vend_event =
   mk_state_machine (IdleVend 0) vend_step
+
 
 (** Invariant: [IdleVend] balance is always 0 — the machine refunds or
     dispenses fully before returning to idle.  Selecting, Dispensing,
@@ -923,11 +1055,13 @@ let vend_invariant (st: vend_state) : bool =
   | Dispensing _ _ -> true  (* change is always nat, non-negative *)
   | OutOfStock _ -> true
 
+
 (** Preservation *)
 let lemma_vend_preservation (st: vend_state) (ev: vend_event)
   : Lemma (requires vend_invariant st /\ Some? (vend_step st ev))
           (ensures (let Some st' = vend_step st ev in vend_invariant st'))
   = ()
+
 
 (** Demo: exact change purchase.
 
@@ -938,6 +1072,7 @@ let lemma_vend_exact_change () : Lemma
    == Some (Dispensing 0 0))
   = ()
 
+
 (** Demo: purchase with change.
 
     @ensures [run vend_machine [InsertCoin 200; SelectItem 0]
@@ -947,12 +1082,14 @@ let lemma_vend_with_change () : Lemma
    == Some (Dispensing 0 50))
   = ()
 
+
 (** Demo: insufficient funds.
 
     @ensures [vend_step (Selecting 50) (SelectItem 0) == None] *)
 let lemma_vend_insufficient () : Lemma
   (vend_step (Selecting 50) (SelectItem 0) == None)
   = ()
+
 
 (** Cancel refunds balance.
 
@@ -961,6 +1098,7 @@ let lemma_vend_cancel_refund () : Lemma
   (run vend_machine [InsertCoin 200; Cancel]
    == Some (IdleVend 0))
   = ()
+
 
 (** Out of stock.
 
