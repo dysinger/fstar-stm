@@ -1,4 +1,4 @@
-# fstar-stm — Agent Guide & Handoff
+# stm — Agent Guide & Handoff
 
 `Data.StateMachine` — verified state machine library, extracted from the xeno
 monorepo.  F* source is 0-admit.  This file records the completed Pulse port so
@@ -10,7 +10,7 @@ the next session resumes cleanly.
    can hang forever.  **Always** run them **detached** and poll the log:
 
    ```bash
-   cd /Users/user/_/fstar-stm
+   cd /Users/user/_/stm
    rm -f /tmp/stm-build.log
    nohup nix build .#checked --print-out-paths --no-link > /tmp/stm-build.log 2>&1 &
    # … poll: tail /tmp/stm-build.log ; ps -p $!
@@ -22,7 +22,7 @@ the next session resumes cleanly.
    it is now cached).
 
 2. **The F\* overlay in `flake.nix` MUST stay byte-identical to
-   `fstar-codec`/`fstar-basen`/`fstar-text`'s.**  Any comment/whitespace change
+   `codec`/`basen`/`text`'s.**  Any comment/whitespace change
    to the `buildPhase`/`installPhase` strings changes the derivation hash and
    forces a full F\* bootstrap.  Do NOT touch those strings.
 
@@ -51,7 +51,7 @@ Target names: `default = native`, `checked`, `ocaml`, `native`, `fsharp`.
   deleted in v2026.09.20; `*` is now natively multiplication).
 - `src/Data.StateMachine.Low.fst` → `src/Data.StateMachine.Pulse.fst`: full
   KaRaMeL→Pulse port (`FStar.HyperStack`/`LowStar.Buffer`/`Stack` →
-  `Pulse.Lib.Array`/`fn`), following `fstar-text`'s `Data.Text.Codec.Pulse.fst`
+  `Pulse.Lib.Array`/`fn`), following `text`'s `Data.Text.Codec.Pulse.fst`
   shape exactly (4 tags instead of 3).
 - `test/Data.StateMachine.Test.Integration.fst`: `open …Low` → `open …Pulse`;
   dropped the `FStar.HyperStack.ST`/`LowStar.Buffer` opens; the Low anchors now
@@ -68,7 +68,7 @@ Data.StateMachine.Examples   — 10 verified example machines
 Data.StateMachine.Pulse      — C-extractable state-tag codec (Custard)
 ```
 
-The Pulse leaf is trivial compared to `fstar-codec`/`fstar-basen`/`fstar-text`:
+The Pulse leaf is trivial compared to `codec`/`basen`/`text`:
 a single 1-byte tag (`SS_Idle` 0x00 / `SS_Active` 0x01 / `SS_Error` 0x02 /
 `SS_Done` 0x03), `encode`/`decode` (`A.array U8.t`, `fn`), plus
 `lemma_roundtrip` (pure), `lemma_pulse_roundtrip`,
@@ -77,9 +77,9 @@ none of the varint/word32 SMT-hang complexity applies here.
 
 ## No internal dependencies
 
-`fstar-stm` is self-contained — it consumes **no** `Data.Codec` and has no
+`stm` is self-contained — it consumes **no** `Data.Codec` and has no
 flake-input dependency beyond `nixpkgs` / `flake-utils` / `treefmt-nix` /
-`fstar`.  There is no `fstar-codec` input, no `codec-src`/`codec-checked`
+`fstar`.  There is no `codec` input, no `codec-src`/`codec-checked`
 injection.
 
 ## Build commands
@@ -94,8 +94,8 @@ nix develop && make check   # dev loop (no nix)
 
 ## Reference
 
-- Canonical references: `../fstar-text` (the token/tag Pulse port whose
-  `Data.Text.Codec.Pulse.fst` is near-identical in shape), `../fstar-codec`
-  (the codec, incl. its `Data.Codec.Pulse`), and `../fstar-basen`.
+- Canonical references: `../text` (the token/tag Pulse port whose
+  `Data.Text.Codec.Pulse.fst` is near-identical in shape), `../codec`
+  (the codec, incl. its `Data.Codec.Pulse`), and `../basen`.
 - The F\* skill: `~/.pi/agent/skills/fstar/fstar-2026.09.20/SKILL.md`
   (Custard, Pulse idiom, `U8.v`/`U32.v` → `Int.Cast`, the dead-Low\* delta).

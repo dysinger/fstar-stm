@@ -1,6 +1,6 @@
 <div align="center">
   <h1>License</h1>
-  <p><strong>fstar-stm</strong> — a formally verified state machine
+  <p><strong>stm</strong> — a formally verified state machine
   library written in F\*.</p>
 </div>
 
